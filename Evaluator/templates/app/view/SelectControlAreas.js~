@@ -1,0 +1,184 @@
+function toggleControl(element) {
+                    for(key in drawControls) {
+                        var control = drawControls[key];
+                        if(element.value == key && element.checked) {
+                            control.activate();
+                        } else {
+                            control.deactivate();
+                        }
+                    }   
+                }
+
+function allowPan(element) {
+    var stop = !element.checked;
+    for(var key in drawControls) {
+        drawControls[key].handler.stopDown = stop;
+        drawControls[key].handler.stopUp = stop;
+    }
+}
+
+function drawPolygon() {
+    for(key in drawControls) {
+        element = this;
+        var control = drawControls[key];
+        if("polygon" == key && element.pressed) {
+            control.activate();
+        } else {
+            control.deactivate();
+        }
+    }
+}
+
+function removePolygon(){
+    var control = map.getControl("OpenLayers_Control_DrawFeature_28");
+    control.layer.removeAllFeatures();
+    control.layer.redraw();
+}     
+
+function sendControlPolygons() {
+    var geojson = new OpenLayers.Format.GeoJSON
+    var control = map.getControl("OpenLayers_Control_DrawFeature_28");
+    polygonsjson = geojson.write(control.layer.getFeaturesByAttribute());
+    
+    Ext.Ajax.request({
+        url : '/map/selectcontrol',
+        method : 'POST',
+        jsonData : polygonsjson,
+        success : function(response) {
+            console.log(mexico.redraw(true));
+        },
+        failure : function() {
+            console.log('Failed to send geojson to server');
+            mexico.redraw(true);
+        }
+    });
+}
+
+function clearControlPolygons() {
+    Ext.Ajax.request({
+        url : '../../map/clear/control',
+        method : 'GET',
+        success : function(response) {
+            console.log(mexico.redraw(true));
+        },
+        failure : function() {
+            console.log('Failed to send request to server');
+        }
+    });
+}
+
+function sendControlByRadius(slider, newValue, thumb, eOpts) {
+    var sliderValues = slider.getValues();
+    Ext.Ajax.request({
+        url : '/map/selectcontrolbyradius/'+sliderValues[0]+'/'+sliderValues[1]+'/',
+        method : 'GET',
+        success : function(response) {
+            console.log(mexico.redraw(true));
+        },
+        failure : function() {
+            console.log('Failed to send geojson to server');
+            mexico.redraw(true);
+        }
+    });
+}
+                                 
+Ext.define('Evaluator.view.SelectControlAreas', {
+	extend : 'Ext.panel.Panel',
+	alias : 'widget.selectcontrolareas',
+	listeners : {
+        beforecollapse : function() {
+           var drawButton = Ext.ComponentQuery.query("button[text='Draw Polygons']")[1];
+           drawButton.toggle(false);
+           drawControls["polygon"].deactivate();
+           removePolygon();
+        }
+    },
+	initComponent : function() {
+		this.dockedItems = [{
+			xtype : 'fieldset',
+			title : 'Option 1: Entire Study Area',
+			layout : 'anchor',
+			frame : 'true',
+			margin : '5 5 10 5',
+			items : [{
+						xtype : 'button',
+						text : 'Select Entire Study Area',
+						handler : function() {
+							Ext.Ajax.disableCaching = false;
+							Ext.Ajax.request({
+										url : 'map/selectcontrolbystudyarea,
+										success : function() {
+											mexico.redraw(true);
+										}
+									});
+						}
+					}, {
+						xtype : 'displayfield',
+						value : '(Excluding Treatment Area)'
+					}]
+		}, {
+			xtype : 'fieldset',
+			title : 'Option 2: Upload a Shapefile',
+			layout : 'anchor',
+			frame : 'true',
+			margin : '5 5 10 5',
+			items : [{
+						xtype : 'textfield',
+						name : 'File Name',
+						fieldLable : 'File Name'
+					}, {
+						xtype : 'button',
+						text : 'Select File'
+					}, {
+						xtype : 'button',
+						text : 'Upload'
+					}]
+		}, {
+			xtype : 'fieldset',
+			title : 'Option 3: Manual Selection',
+			layout : 'anchor',
+			frame : 'true',
+			margin : '5 5 10 5',
+			items : [{
+								xtype : 'button',
+								text : 'Draw Polygons',
+								enableToggle : true,
+								handler: drawPolygon
+							},{
+    							xtype : 'button',
+    							text : 'Clear Polygons',
+    							handler: removePolygon
+							},{
+    							xtype : 'button',
+    							text : 'Select Control Areas by Polygon',
+    							handler: sendControlPolygons
+							},{
+    							xtype : 'button',
+    							text : 'Clear Control Areas Selection',
+    							handler: clearControlPolygons
+							}]
+		}, {
+			xtype : 'fieldset',
+			title : 'Option 4: Proximity to Policy Area',
+			layout : 'anchor',
+			frame : 'true',
+			margin : '5 5 10 5',
+			items : [{
+						xtype : 'multislider',
+						fieldLabel : 'Radius (km)',
+						labelAlign : 'top',
+						width : 175,
+						margin : '5 5 5 5',
+						values : [25, 75],
+						increment : 1,
+						minValue : 0,
+						maxValue : 100,
+						listeners: {
+						    changecomplete: sendControlByRadius
+						    }
+					}]
+		}];
+
+		this.callParent();
+	}
+});

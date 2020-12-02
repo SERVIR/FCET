@@ -1,0 +1,72 @@
+var me = this, items = [], ctrl;
+map = new OpenLayers.Map("map", {
+        maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+        units:'m',
+        projection: "EPSG:900913",
+        displayProjection: new OpenLayers.Projection("EPSG:4326"),
+    });
+mexico = new OpenLayers.Layer.WMS(
+    // http://localhost/geoserver/evaluator/wms",
+    "evaluator:django",
+    "../../geoserver/evaluator/wms", {
+        "LAYERS" : 'evaluator:usermap',
+        "format" : 'image/png',
+        isBaseLayer : false,
+        "transparent" : true,
+        strategies: [new OpenLayers.Strategy.BBOX()]
+    },
+    // use sld hash to provide style data through xml
+    {
+        buffer : 0,
+        singleTile : true,
+        displayOutsideMaxExtent : false,
+        yx : {
+                'EPSG:900913 ' : true
+            }
+	});
+				//Create layers needed for app
+var polygonLayer = new OpenLayers.Layer.Vector("Polygon Layer");
+
+var gphy = new OpenLayers.Layer.Google("Google Physical", {
+    type:google.maps.MapTypeId.SATELLITE,
+    'sphericalMercator':true,
+    minZoomLevel:3, 
+    maxZoomLevel:10, 
+    fractionalZoom: true});
+//Set map projection --needed to keep maps in sync
+aliasproj = new OpenLayers.Projection("EPSG:3857");
+gphy.projection = aliasproj;
+//Add layers
+map.addLayers([mexico, gphy, polygonLayer]);
+//Add Controls
+drawControls = {
+    polygon: new OpenLayers.Control.DrawFeature(polygonLayer,
+    OpenLayers.Handler.Polygon),
+};
+                
+for(var key in drawControls) {
+    map.addControl(drawControls[key]);
+}
+map.zoomTo(4);
+map.zoomToMaxExtent();
+//Set a focal point when the map initializes --default is 0,0 which does not render
+map.setCenter(new OpenLayers.LonLat(-80,-20).transform('EPSG:4326', 'EPSG:3857'))
+
+
+Ext.define('Evaluator.view.MainMap', {
+			// Ext.panel.Panel-specific options:
+			extend : 'GeoExt.panel.Map',
+			alias : 'widget.mainmap',
+			border : 'false',
+			layout : 'fit',
+			layers : [mexico, gphy],
+			map : map,
+			// GeoExt.panel.Map-specific options :
+			center : '10.7,50.5',
+			zoom : 3,
+
+			initComponent : function() {
+				this.callParent(arguments);
+			}
+		});
+

@@ -1,0 +1,26 @@
+from django.conf.urls import url
+from map import views
+urlpatterns = [
+    url(r'^clear$', views.clear_map),
+    # url(r'^map$', views.map_features),
+    url(r'^mapchiapas$', views.map_chiapas),
+    url(r'^mapregions/(?P<fid>[\d]+)/$', views.map_region),
+    url(r'^unmapregions/(?P<fid>[\d]+)/$', views.unmap_region),
+    url(r'^clear$', views.clear_map),
+    url(r'^selecttreatment$', views.select_treatment),
+    url(r'^selectcontrol$', views.select_control),
+    url(r'^selectcontrolbystudyarea$', views.select_control_points_by_study_area),
+    url(r'^selectcontrolbyradius/(?P<lower>[0-9]{1,3})/(?P<upper>[0-9]{1,3})/$', views.select_control_by_radius),
+    url(r'^excludespillovers/(?P<upper>[0-9]{1,3})/$', views.select_control_by_exclude_spillovers),
+    url(r'^forestfilter/set/(?P<lower_bound>[0-9]{1,3})/(?P<upper_bound>[0-9]{1,3})/$', views.filter_forest_cover),
+    url(r'^clear/treatment$', views.clear_treatment),
+    url(r'^clear/control$', views.clear_control),
+    url(r'^clear/matched$', views.clear_matched),
+    url(r'^selectprotectedareas$', views.select_protected_areas),
+    url(r'^login/$', views.user_login),
+    url(r'^settings/reset$', views.reset_map_setting),
+    url(r'^service/geojson$', views.shp_to_geojson),
+    url(r'^report/(?P<bbox>.*)/(?P<width>.*)/(?P<height>.*)/$', views.create_report),
+    url(r'^sess/$', views.get_session),
+    url(r'^policy_areas/$', views.policy_areas),
+]

@@ -1,0 +1,260 @@
+Ext.define('Evaluator.view.selectCovariates', {
+    extend: 'Ext.window.Window',
+    alias: 'widget.selectcovariates',
+    title: 'Select Covariates',
+    height: 310,
+    width: 400,
+	
+    initComponent: function () {
+        var matchingMethods = Ext.create('Ext.data.Store', {
+            fields: ['abbr', 'name'],
+            data: [
+                {"abbr": "PSM", "name": "Propensity Score Matching"},
+                {"abbr": "CM", "name": "Covariate Matching"}
+            ]
+        });
+
+        var matchingEstimator = Ext.create('Ext.data.Store', {
+            fields: ['abbr', 'name'],
+            data: [
+                {"abbr": "NN1", "name": "Nearest Neighbor 1-1"}
+            ]
+        });
+
+
+        var selectedCovariates = Ext.create('Ext.data.Store', {
+            storeId: 'selectedcovariates',
+            fields: ['name'],
+            data: []
+        });
+		
+		Ext.define('Evaluator.model.Covariates', {
+            extend: 'Ext.data.Model',
+            fields: ['name'],
+            proxy: {
+                type: 'ajax',
+                url: 'layers/covariates',
+                reader: {
+                    type: 'json'
+                }
+            }
+        });
+        Ext.require('Ext.data.Store');
+        matchingCovariates = Ext.create('Ext.data.Store', {
+            storeId: 'matchingcovariates',
+            model: 'Evaluator.model.Covariates',
+            autoLoad: true
+        });
+
+        selector = Ext.create('Ext.ux.form.ItemSelector', {
+            maxHeight: '200',
+            minWidth: '360',
+            imagePath: '../static/src/js/ext/examples/ux/css/images/',
+            store: Ext.data.StoreManager.lookup('matchingcovariates'),
+            displayField: 'name',
+            valueField: 'name',
+            value: 'name'
+        });
+
+        this.dockedItems = [{
+            xtype: 'container',
+            layout: 'hbox',
+            height: 50,
+            width: 390,
+            items: [{
+                xtype: 'fieldset',
+                title: 'Select a Matching Method',
+                defaultType: 'radiofield',
+                frame: 'true',
+                margin: '5 5 10 5',
+                items: [{
+                    xtype: 'combo',
+                    store: matchingMethods,
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'abbr',
+					value: 'PSM'
+                }]
+            }, {
+                xtype: 'fieldset',
+                title: 'Matching Estimator',
+                defaultType: 'radiofield',
+                frame: 'true',
+                margin: '5 5 10 5',
+                items: [{
+                    xtype: 'combo',
+                    store: matchingEstimator,
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'abbr',
+					value: 'NN1'
+                }]
+            }]
+        }, {
+            xtype: 'fieldset',
+            title: 'Select Covariates',
+            layout: 'fit',
+            frame: 'true',
+            margin: '5 5 10 5',
+            tool: 'help',
+            items: [{
+                    xtype: 'container',
+                    layout: 'hbox',
+                    items: [selector]
+                }]
+        }];
+		
+        this.callParent();
+    }
+});
+
+Ext.define('Evaluator.view.advancedSettings', {
+    extend: 'Ext.window.Window',
+    alias: 'widget.advancedsettings',
+    title: 'Advanced Settings',
+    width: 400,
+	
+    initComponent: function () {
+        var standardErrorMethod = Ext.create('Ext.data.Store', {
+            fields: ['abbr', 'name'],
+            data: [
+                {"abbr": "SE", "name": "Simple Standard Errors"},
+                {"abbr": "CL", "name": "Cluster"},
+                {"abbr": "BS", "name": "Bootstrap"},
+                {"abbr": "AI", "name": "Abadie and Imbens"}
+            ]
+        });
+
+        this.dockedItems = [{
+					xtype: 'fieldset',
+					items: [{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Caliper',
+                    labelAlign: 'top',
+                    labelStyle: 'font-weight: bold;',
+                    labelSeparator: '',
+                    boxLabel: 'Set a caliper',
+                    margin: '5 5 10 5'
+                }]},{
+					xtype: 'fieldset',
+					items: [{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Common Support',
+                    labelAlign: 'top',
+                    labelStyle: 'font-weight: bold;',
+                    labelSeparator: '',
+                    boxLabel: 'Enforce Common Support',
+                    margin: '5 5 10 5'
+                }]
+				} , {
+					xtype: 'fieldset',
+					items: [{
+                    xtype: 'radiogroup',
+                    layout: 'anchor',
+                    fieldLabel: 'Standard Errors',
+                    labelAlign: 'top',
+                    labelStyle: 'font-weight: bold;',
+                    labelSeparator: '',
+                    margin: '5 5 10 5',
+                    items: [{
+                        xtype: 'combo',
+                        store: standardErrorMethod,
+                        queryMode: 'local',
+                        displayField: 'name',
+                        valueField: 'abbr'
+                    }]
+                }]
+				}];
+		
+        this.callParent();
+    }
+});
+
+function createSelectCovariatesWindow() {
+    element = this;
+    if (!Ext.getCmp('selectCovariates')) {
+        Ext.create('widget.selectcovariates', {
+            id: 'selectCovariates',
+            autoShow: true
+        });
+    } else {
+        Ext.getCmp('selectCovariates').close();
+    }
+}
+
+function createAdvancedSettingsWindow() {
+    element = this;
+    if (!Ext.getCmp('advancedSettings')) {
+        Ext.create('widget.advancedsettings', {
+            id: 'advancedSettings',
+            autoShow: true
+        });
+    } else {
+        Ext.getCmp('advancedSettings').close();
+    }
+}
+
+Ext.define('Evaluator.view.MatchSimilarPlots', {
+    extend: 'Ext.panel.Panel',
+    alias: 'widget.matchsimilarplots',
+
+    initComponent: function () {
+		this.dockedItems = [
+            {
+                xtype: 'button',
+                text: 'Select Covariates',
+				handler: createSelectCovariatesWindow
+            },
+            {
+                xtype: 'button',
+                text: 'Advanced Settings',
+				handler: createAdvancedSettingsWindow
+            },
+            {
+                xtype: 'button',
+                text: 'Run Statistical Matching',
+				handler: function () {
+                        var covariates = selector.getValue().join(',')
+                        var url = '/job/new/0/true/' + covariates + '/NN/PSM/forest_los/2003/SIMPLE'
+                        var myMask = new Ext.LoadMask(Ext.getBody(), {msg: "Please wait..."});
+                        myMask.show();
+                        Ext.Ajax.request({
+                                url: url,
+                                method: 'GET',
+                                success: function () {
+                                    mexico.redraw(true);
+                                    myMask.hide();
+                                },
+                                failure: function () {
+                                    myMask.hide();
+                                }
+                            }
+                        );
+                    }
+            },
+            {
+                xtype: 'button',
+                text: 'Clear Matched Points',
+				handler: function () {
+                        Ext.Ajax.disableCaching = true;
+                        var myMask = new Ext.LoadMask(Ext.getBody(), {msg: "Please wait..."});
+                        myMask.show();
+                        Ext.Ajax.request({
+                                url: '/map/clear/matched',
+                                method: 'GET',
+                                timeout: 120000,
+                                success: function () {
+                                    mexico.redraw(true);
+                                    myMask.hide();
+                                },
+                                failure: function () {
+                                    myMask.hide();
+                                }
+                            }
+                        );
+                    }
+            }];
+		
+        this.callParent();
+    }
+});

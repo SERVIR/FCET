@@ -1,0 +1,20 @@
+<html>
+<head>
+</head>
+<body>
+<form enctype="multipart/form-data" method="post" action={% url 'upload_file' %}>
+{% csrf_token %}
+<p>{{ form.non_field_errors }}</p>
+<p>{{ form.upload_file.label_tag }}</p>
+<p>
+    {{ form.upload_file.errors }}
+    {{ form.upload_file }}
+</p>
+<p><input type="submit" value="Upload" /></p>
+</form>
+
+{% for file in files %}
+    {{forloop.counter}}.<a>{{ file.upload_file.name }}</a>
+{% endfor %}
+</body>
+</html>
