@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.conf.urls import url
+from django.urls import re_path as url
 from jobs import views
 #JOB_URL = r'^new/' + '(?P<caliper>[0-9]{1,3})/' + \
 #    '(?P<support>true|false)/' + \

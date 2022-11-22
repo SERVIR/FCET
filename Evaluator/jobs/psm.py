@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 #Consider extracting a results class
 
-def fit_reg(covariate,treated, weights=pd.Series()):
+def fit_reg(covariate,treated, weights=pd.Series(dtype='float64')):
     link = families.links.logit
     family = families.Binomial(link)
     if not weights.any():

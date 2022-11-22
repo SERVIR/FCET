@@ -20,7 +20,7 @@ class CBSmeansManager(models.Manager):
         """
         for name in balance_statistics.index:
             try:
-				means = CBSmeans(job=job,
+                means = CBSmeans(job=job,
 								 name=name,
 								 sample='Unmatched',
 								 treated=balance_statistics.unmatched_treated_mean[name],
@@ -29,15 +29,15 @@ class CBSmeansManager(models.Manager):
 								 biasr=balance_statistics.bias_reduction[name],
 								 t=balance_statistics.unmatched_t_statistic[name],
 								 pt=balance_statistics.unmatched_p_value[name])
-				means.save()
+                means.save()
             except:
-			    raise Exception("Could not write {} to tables. Values passed: {}".format(
+                raise Exception("Could not write {} to tables. Values passed: {}".format(
 					name, 
 					(means.name, means.sample, means.treated, means.control, means.bias, means.biasr, means.t, means.pt))
 				)
 
             try:
-				means = CBSmeans(job=job,
+                means = CBSmeans(job=job,
 								 name=name,
 								 sample='Matched',
 								 treated=balance_statistics.matched_treated_mean[name],
@@ -46,9 +46,9 @@ class CBSmeansManager(models.Manager):
 								 biasr=balance_statistics.bias_reduction[name],
 								 t=balance_statistics.matched_t_statistic[name],
 								 pt=balance_statistics.matched_p_value[name])
-				means.save()
+                means.save()
             except:
-			    raise Exception("Could not write {} to tables. Values passed: {}".format(
+                raise Exception("Could not write {} to tables. Values passed: {}".format(
 					name, 
 					(means.name, means.sample, means.treated, means.control, means.bias, means.biasr, means.t, means.pt))
 				)
@@ -80,7 +80,7 @@ class CBSmeans(models.Model):
     """
     Models data for Check Balance Statistics table of means
     """
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=True, default='')
     sample = models.CharField(max_length=100, blank=True, default='')
     treated = models.DecimalField(max_digits=18, decimal_places=10, blank=True, null=True)
@@ -137,7 +137,7 @@ class CBStests(models.Model):
     """
     Models data for Check Balance Statistics test statistic table
     """
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     sample = models.CharField(max_length=100, blank=True, default='')
     pseudo_r2 = models.FloatField()
     LR_chi2 = models.FloatField()
@@ -199,7 +199,7 @@ class Results(models.Model):
     """
     Models data that is fed into the results tables
     """
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     variable = models.CharField(max_length=100, blank=True, default='')
     sample = models.CharField(max_length=100, blank=True, default='')
     treated = models.FloatField()
@@ -241,7 +241,7 @@ class CheckSensitivity(models.Model):
     """
     Models data that is fed into the Check Sensitivity table
     """
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     gamma = models.DecimalField(max_digits=3, decimal_places=1)
     q_plus = models.FloatField(null=True)
     q_minus = models.FloatField(null=True)
@@ -290,7 +290,7 @@ class ResultsChart(models.Model):
     """
     Models data that is fed to the front end results chart
     """
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=True, default='')
     data_values = models.FloatField()
     objects = ResultsChartManager()

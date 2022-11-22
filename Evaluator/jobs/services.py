@@ -1,7 +1,7 @@
 from layers.models import AttributeValue, Attribute
 import layers.services as layer_services
 from pandas import DataFrame, Index, Series
-from statistical_matching import StatisticalMatching, BalanceStatistics, RosenbaumBounds
+from .statistical_matching import StatisticalMatching, BalanceStatistics, RosenbaumBounds
 from itertools import product as cartesian_product
 from django.core.cache import cache
 

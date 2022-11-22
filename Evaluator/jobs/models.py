@@ -2,10 +2,10 @@ from django.db import models
 from map.models import Map
 from django.contrib.auth.models import User
 from layers.models import Feature, AttributeValue
-from psm import PropensityScoreMatching
+from .psm import PropensityScoreMatching
 from itertools import chain
 from pickle import dump
-from services import StatisticalMatchingAdapter
+from .services import StatisticalMatchingAdapter
 import logging
 import pandas as pd
 
@@ -34,8 +34,8 @@ class Job(models.Model):
         ('AI', 'Abadie and Imbens')
     )
 
-    user = models.ForeignKey(User)
-    usermap = models.ForeignKey(Map)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    usermap = models.ForeignKey(Map, on_delete=models.CASCADE)
     matching_method = models.CharField(max_length=50, choices=METHODS)
     matching_estimator = models.CharField(max_length=50, choices=ESTIMATORS)
     covariate_variables = models.TextField(null=False)
@@ -45,7 +45,10 @@ class Job(models.Model):
     standard_error_type = models.CharField(max_length=50, choices=STANDARD_ERRORS)
     low_outcome_year = models.IntegerField(default=2007)
     high_outcome_year = models.IntegerField(default=2007)
-    current = models.NullBooleanField(default=False)
+    # NullBooleanField is removed except for support in historical migrations.
+    # HINT: Use BooleanField(null=True) instead.
+    # current = models.NullBooleanField(default=False)
+    current = models.BooleanField(null=True)
     objects = JobManager()
 
     def process(self, data):
@@ -69,7 +72,7 @@ class Job(models.Model):
         return sma
 
 class JobStats(models.Model):
-    job_id = models.ForeignKey(Job)
+    job_id = models.ForeignKey(Job, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     session_start = models.DateTimeField()
     country = models.CharField(max_length=500, default='')

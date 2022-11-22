@@ -12,18 +12,19 @@ def get_points_by_policy(policy_name):
     point_cache = cache.get(' '.join(('policy', policy_name, str(chunk_num))).replace(' ', '_'))
     points = []
     while point_cache is not None:
-	points.extend(point_cache)
-	chunk_num += 1
-	point_cache = cache.get(' '.join(('policy', policy_name, str(chunk_num))).replace(' ', '_'))
+        points.extend(point_cache)
+        chunk_num += 1
+        point_cache = cache.get(' '.join(('policy', policy_name, str(chunk_num))).replace(' ', '_'))
 	
     if not points:
         polygons = region_services.get_policy_area_polygons(policy_name)
-	mpoly = polygons_to_mpoly(polygons)
+        mpoly = polygons_to_mpoly(polygons)
         points = layer_services.get_points_by_polygons(mpoly)
 	# Store and load this in chunks
-	for idx, chunk in enumerate([points[i:i+190000] for i in range(0, len(points), 190000)]):
-	        cache.set(' '.join(('policy', policy_name, str(idx))).replace(' ', '_'), chunk, None)
-		assert cache.has_key(' '.join(('policy', policy_name, str(idx))).replace(' ', '_')), "Could not write to cache"
+    for idx, chunk in enumerate([points[i:i+190000] for i in range(0, len(points), 190000)]):
+        cache.set(' '.join(('policy', policy_name, str(idx))).replace(' ', '_'), chunk, None)
+        assert cache.has_key(' '.join(('policy', policy_name, str(idx))).replace(' ', '_')), "Could not write to cache"
+    
     return points
 
 
@@ -32,7 +33,7 @@ def clear_cache_points_by_policy(policy_name):
     policy_key = ' '.join(('policy',policy_name,str(chunk_num))).replace(' ', '_')
     while cache.has_key(policy_key):
         cache.delete(policy_key)
-	chunk_num +=1
+        chunk_num +=1
         policy_key = ' '.join(('policy',policy_name,str(chunk_num))).replace(' ', '_')
 
 

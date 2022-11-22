@@ -10,7 +10,7 @@ put into its own app if the the complexity of the routing expands
 '''
 
 from django.shortcuts import render
-from django.shortcuts import render_to_response
+from django.shortcuts import render as render_to_response
 from django.template import RequestContext
 from django.shortcuts import redirect
 from django.http import HttpResponse
@@ -22,8 +22,8 @@ import requests
 def index(request):
     '''Serves the main html page responsible for loading the ExtJS app, ExtJS dependencies, and google map dependencies'''
     return render_to_response(
-        'first_page/index.html',
-        context_instance=RequestContext(request))
+        template_name='first_page/index.html',
+        request=request)
 
 
 def app(request):

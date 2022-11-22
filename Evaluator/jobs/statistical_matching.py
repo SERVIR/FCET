@@ -10,13 +10,14 @@ from statsmodels.tools.tools import add_constant
 from statsmodels.stats.weightstats import ttest_ind
 import pandas as pd
 import numpy as np
-from scipy.stats import norm, chisqprob
+from scipy.stats import norm
+from scipy.stats import chi2 as chisqprob
 from collections import defaultdict
 
 
 import sklearn.neighbors as sk
 
-def fit_reg(covariate, treated, weights=pd.Series()):
+def fit_reg(covariate, treated, weights=pd.Series(dtype='float64')):
     treated = add_constant(treated)
     if not weights.any():
         reg = GLM(covariate, treated)

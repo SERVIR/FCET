@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class Upload(models.Model):
     upload_id = models.BigIntegerField(null=True)
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     # hold importer state or internal state (STATE_)
     #state = models.CharField(max_length=16)
     date = models.DateTimeField('date', default=timezone.now)
@@ -71,10 +71,10 @@ class Upload(models.Model):
         chunks = (layer[i:i+size] for i in range(0, slice_stop, size))
         for bulk_ref, data_features in enumerate(chunks):
             collect()
-            print "batch {} of {}".format(int(bulk_ref), slice_stop/size)
-            print "data features take: %s bytes" % sys.getsizeof(data_features)
+            print("batch {} of {}".format(int(bulk_ref), slice_stop/size))
+            print("data features take: %s bytes" % sys.getsizeof(data_features))
 
-            print "collecting features"
+            print("collecting features")
             numbered_features = list(enumerate(data_features))
             #features = [Feature(geom_point=GEOSGeometry(df.geom.wkt), shapefile=self, row_id=id, bulk_ref=bulk_ref)
             #            for (id, df)
@@ -85,22 +85,22 @@ class Upload(models.Model):
             #for id, df in numbered_features:
             #    print GEOSGeometry(df.transform('4326'))
 
-            print "features take: %s bytes" % sys.getsizeof(features)
-            print "feature bulk insert"
+            print("features take: %s bytes" % sys.getsizeof(features))
+            print("feature bulk insert")
             Feature.objects.bulk_create(features)
             collect()
-            print "Finished feature bulk insert"
+            print("Finished feature bulk insert")
 
-            print "Getting feature ids"
+            print("Getting feature ids")
             feature_pairs = zip(list(Feature.objects
                                      .filter(shapefile=self,
                                              row_id__in=[id for id, _ in numbered_features],
                                              bulk_ref=bulk_ref)
                                      .order_by('row_id')),
                                 data_features)
-            print "feature pairs take: %s bytes" % sys.getsizeof(feature_pairs)
+            print("feature pairs take: %s bytes" % sys.getsizeof(feature_pairs))
 
-            print "Generating feature attributes"
+            print("Generating feature attributes")
             cursor = connection.cursor()
             attribute_values = []
             for feature_pair, attribute in itertools.product(feature_pairs, attributes):
@@ -109,17 +109,17 @@ class Upload(models.Model):
                 attribute_value = (feature.id, attribute.id, unicode(data_feature.get(attribute.name)).encode('utf-8'))
                 attribute_values.append(attribute_value)
             sql = 'INSERT INTO "layers_attributevalue" ("feature_id", "attribute_id", "value") VALUES ' + str(attribute_values).strip('[]')
-            print "attribute values take: %s bytes" % sys.getsizeof(attribute_values)
+            print("attribute values take: %s bytes" % sys.getsizeof(attribute_values))
             del attribute_values
-            print "SQL takes: %s bytes" % sys.getsizeof(sql)
-            print "Attribute value bulk insert"
+            print("SQL takes: %s bytes" % sys.getsizeof(sql))
+            print("Attribute value bulk insert")
             cursor.execute(sql)
-            print "Finished attribute value bulk insert"
+            print("Finished attribute value bulk insert")
         ds = None
 
 #Create upload file
 class UploadFile(models.Model):
-    upload = models.ForeignKey(Upload, null=True, blank=True)
+    upload = models.ForeignKey(Upload, null=True, blank=True, on_delete=models.CASCADE)
     upload_file = models.FileField(upload_to="uploads")
     slug = models.SlugField(max_length=50, blank=True)
 
@@ -182,7 +182,7 @@ class Feature(geomodels.Model):
     """
     SRID = 4326
 
-    shapefile = models.ForeignKey(Upload, null=True)
+    shapefile = models.ForeignKey(Upload, null=True, on_delete=models.CASCADE)
     row_id = models.IntegerField()
     bulk_ref = models.IntegerField()
     user_maps = models.ManyToManyField(Map, through='FeatureStatus')
@@ -373,8 +373,8 @@ class FeatureStatus(models.Model):
     Extends the feature model to have treated and controlled attributes
     without creating a one to one relationship between feature and status
     """
-    user_map = models.ForeignKey(Map, null=True)
-    feature = models.ForeignKey(Feature, null=True)
+    user_map = models.ForeignKey(Map, null=True, on_delete=models.CASCADE)
+    feature = models.ForeignKey(Feature, null=True, on_delete=models.CASCADE)
     treated = models.BooleanField(default=False)
     controlled = models.BooleanField(default=False)
     matched = models.BooleanField(default=False)
@@ -389,7 +389,7 @@ class FastFeatureStatus(models.Model):
     Extends the feature model to have treated and controlled attributes
     without creating a one to one relationship between feature and status
     """
-    user_map = models.ForeignKey(Map, null=True)
+    user_map = models.ForeignKey(Map, null=True, on_delete=models.CASCADE)
     set_type = models.CharField(choices=(
         ('SELECTED', 'SELECTED'),
         ('TREATED', 'TREATED'),
@@ -417,8 +417,8 @@ class AttributeManager(models.Manager):
 
 
 class Attribute(models.Model):
-    shapefile = models.ForeignKey(Upload, null=True)
-    user_map = models.ForeignKey(Map, null=True)
+    shapefile = models.ForeignKey(Upload, null=True, on_delete=models.CASCADE)
+    user_map = models.ForeignKey(Map, null=True, on_delete=models.CASCADE)
     feature = models.ManyToManyField(Feature)
     name = models.CharField(max_length=255)  # Don't forget to the variable length similarly
     objects = AttributeManager()
@@ -463,14 +463,14 @@ class AttributeValueManager(models.Manager):
         for page in range(1, paginator.num_pages + 1):
             vals = paginator.page(page).object_list
             cache.set_many({str(val['attribute_id'])+'_'+str(val['feature_id']):val for val in vals}, None)
-            print "done processing page %s of %s" % (page, paginator.num_pages)
+            print("done processing page %s of %s" % (page, paginator.num_pages))
 
     def test_cache(self, values):
         cache.get_many([str(val['attribute_id'])+'_'+str(val['feature_id']) for val in values])
 
 class AttributeValue(models.Model):
-    feature = models.ForeignKey(Feature)
-    attribute = models.ForeignKey(Attribute)
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
     value = models.CharField(max_length=255, blank=True, null=True)
     objects = AttributeValueManager()
 

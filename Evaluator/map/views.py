@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_exempt
 from functools import wraps
-from django.utils.decorators import available_attrs
+# available_attrs was a Python 2-3 compatability function
+# from django.utils.decorators import available_attrs
 from django.http import HttpResponse
 from layers.models import Feature, Attribute, AttributeValue
 from django.db import transaction
@@ -15,7 +16,7 @@ from map.models import ShapeFileUpload, UserSession, Map
 from tables import services as table_services
 import logging
 from django.core.cache import cache
-from pdf_generation import generate_results_report
+from .pdf_generation import generate_results_report
 from django.utils.timezone import now
 from django.utils.dateformat import DateFormat
 from first_page.views import geoserver_map
@@ -35,7 +36,10 @@ def login_required(function=None):
         return user.is_authenticated()
 
     def decorator(view_func):
-        @wraps(view_func, assigned=available_attrs(view_func))
+        # available_attrs was a Python 2-3 compatability function
+        # @wraps(view_func, assigned=available_attrs(view_func))
+        wraps(view_func)
+
         def _wrapped_view(request, *args, **kwargs):
             if test_func(request.user):
                 return view_func(request, *args, **kwargs)
