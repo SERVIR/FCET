@@ -1,6 +1,6 @@
 FROM python:3.10.8-slim
 
-RUN apk update && apk upgrade && apk add --no-cache make g++ bash git openssh postgresql-dev curl
+# RUN apk update && apk upgrade && apk add --no-cache make g++ bash git openssh postgresql-dev curl
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
