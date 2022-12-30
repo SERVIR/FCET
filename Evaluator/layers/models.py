@@ -442,8 +442,37 @@ class AttributeValueManager(models.Manager):
         cursor = connection.cursor()
         fids = '('+','.join(str(x) for x in feature_ids)+')'
         aids = '('+','.join(str(x) for x in attribute_ids)+')'
-        cursor.execute('SELECT feature_id, attribute_id, value FROM layers_attributevalue WHERE feature_id IN ' +
-                                   fids + ' AND attribute_id IN '+aids+' ORDER BY feature_id, attribute_id')
+
+        if fids != '()' and aids != '()':
+            query = f"""
+            SELECT feature_id, attribute_id, value 
+            FROM layers_attributevalue 
+            WHERE feature_id IN {fids}
+            AND attribute_id IN {aids}
+            ORDER BY feature_id, attribute_id
+            """
+        if fids != '()' and aids == '()':
+            query = f"""
+            SELECT feature_id, attribute_id, value 
+            FROM layers_attributevalue 
+            WHERE feature_id IN {fids}
+            ORDER BY feature_id, attribute_id
+            """
+        if fids == '()' and aids != '()':
+            query = f"""
+            SELECT feature_id, attribute_id, value 
+            FROM layers_attributevalue 
+            WHERE attribute_id IN {aids}
+            ORDER BY feature_id, attribute_id
+            """
+        if fids == '()' and aids == '()':
+            query = f"""
+            SELECT feature_id, attribute_id, value 
+            FROM layers_attributevalue
+            ORDER BY feature_id, attribute_id
+            """
+            
+        cursor.execute(query)
         rows = cursor.fetchall()
         cursor.close()
         return rows
