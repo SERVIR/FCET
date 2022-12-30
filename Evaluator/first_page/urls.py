@@ -4,8 +4,6 @@ including the main page. The structure is specific to an ExtJS app,
 but it's possible to interchange some components with little hassle.
 '''
 
-from django.conf import settings
-from django.conf.urls.static import static
 from django.urls import re_path as url
 from first_page import views
 
@@ -39,4 +37,4 @@ urlpatterns  = [
     url(r'^app/controller/Song.js$', views.song_controller),
     url(r'^geoserver/evaluator/wms$', views.geoserver_wms),
     url(r'^geoserver/evaluator/wfs$', views.geoserver_wfs),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]

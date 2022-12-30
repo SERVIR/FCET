@@ -19,12 +19,12 @@ from django.db import transaction
 @transaction.atomic
 def create_job(request):
 
-    body = json.loads(request.body)
+    body = json.loads(request.body.decode("utf-8"))
     user_map = Map.objects.get(pk=request.session['mid'])
     _clear_job(user_map)
 
     caliper = body['caliper']
-    support = body['support']
+    support = (body['support'] == "true") # Fix boolean string parsing
     covariates = body['covariates']
     estimator = body['estimator']
     method = body['method']
@@ -92,7 +92,7 @@ def create_job(request):
     balance_statistics = stat_match.balance_statistics()
     bounds = stat_match.bounds(data.outcome_column(job.low_outcome_year, job.high_outcome_year))
     
-    CBSmeans.objects.create_table(job, balance_statistics)
+    CBSmeans.objects.create_table(job, balance_statistics)    
     CBStests.objects.create_table(job, balance_statistics)
     # Results.objects.create_table(job, results, data.outcome_names[0])
     Results.objects.create_table(job, results, "Forest Loss")

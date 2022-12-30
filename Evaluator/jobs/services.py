@@ -101,8 +101,10 @@ class Data(object):
             self._design_matrix = self._query_to_dataframe(attributes, self.covariate_names)
             # Slightly messy error handling if the attribute table is not properly constructed
             assert len(self.covariate_names) == self._design_matrix.shape[1], "The number of returned covariates does not match the number of requested covariates."
-            self._design_matrix.dropna(axis=1, how='all', 
-                    thresh=0.1*self._design_matrix.shape[0], inplace=True)
+            # You cannot set both the how and thresh arguments at the same time.
+            self._design_matrix.dropna(axis=1, #how='all', 
+                    thresh=0.1*self._design_matrix.shape[0], 
+                    inplace=True)
             self._design_matrix.rename(columns=self.abstractfeature.attribute_names(self.covariate_names), inplace=True)
 
         self._design_matrix = self._design_matrix.reindex(self.index)
@@ -152,7 +154,9 @@ class Data(object):
 
     def _query_to_dataframe(self, attributes, covariates):
         records = DataFrame.from_records(attributes, columns=['feature_id', 'attribute_name', 'value'])
-        records = records.convert_objects(convert_numeric=True)
+        # pd.DataFrame.convert_objects Deprecated --> Use convert_dtypes
+        # records = records.convert_objects(convert_numeric=True)
+        records = records.convert_dtypes(convert_integer=True, convert_floating=True)
         records['value'] = records.value.apply(float)
         records = records.pivot(index='feature_id', columns='attribute_name', values='value')
 

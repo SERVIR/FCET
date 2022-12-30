@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 #Consider extracting a results class
 
 def fit_reg(covariate,treated, weights=pd.Series(dtype='float64')):
-    link = families.links.logit
+    link = families.links.logit()
     family = families.Binomial(link)
     if not weights.any():
         reg = GLM(covariate, treated,family=family, sigma=weights)
@@ -150,7 +150,7 @@ class PropensityScoreMatching(object):
        
         for value in match_values:
             weights[value] += 1
-        self._weights = np.asarray(weights.values())
+        self._weights = np.asarray(list(weights.values()))
         W = np.sum(self._weights**2)
         self.matched_se = np.sqrt(s1/n1 + (s2*W)/(n1**2))
         self.matched_tstat = (self.matched_treated_mean - self.matched_control_mean) / self.matched_se
@@ -222,7 +222,7 @@ class PropensityScoreMatching(object):
         treated = pd.Series(treated)
         design_matrix = pd.DataFrame(design_matrix)
         #Fit propensity socre
-        link = families.links.logit
+        link = families.links.logit()
         family = families.Binomial(link)
         reg = GLM(treated, design_matrix, family=family)
         fitted_reg = reg.fit()
@@ -248,7 +248,7 @@ class PropensityScoreMatching(object):
        
         for value in match_values:
             weights[value] += 1
-        self._weights = np.asarray(weights.values())
+        self._weights = np.asarray(list(weights.values()))
 
     def get_matches(self):
         return self._matches
@@ -354,7 +354,7 @@ class MatchingResults(object):
             
             for value in match_indicies:
                 weights[value] += 1
-            return np.asarray(weights.values())
+            return np.asarray(list(weights.values()))
             
         treatment_outcomes = self.outcome[self.treated==1]
         control_outcomes = self.outcome[self.treated==0]

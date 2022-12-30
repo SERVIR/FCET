@@ -30,14 +30,14 @@ class RegionManager(geomodels.Manager):
         # For representation in ExtJs we require both a numerical id and a name, however the id can be somewhat arbitrary
 
         country_list = []
-        for country_id, (country, items) in enumerate(countries.iteritems()):
+        for country_id, (country, items) in enumerate(countries.items()):
             sub_region_list = []
             sub_regions = items['sub_regions']
-            for sub_region_id, (sub_region, items) in enumerate(sub_regions.iteritems()):
+            for sub_region_id, (sub_region, items) in enumerate(sub_regions.items()):
                 regions = items['regions']
                 region_list = [{'id': region_id, 'name': region, 'bounds':items['bounds']}
                                for region_id, (region, items)
-                               in enumerate(regions.iteritems())]
+                               in enumerate(regions.items())]
 
                 sub_region_list.append({'id': sub_region_id, 'name':sub_region, 'regions':region_list})
             country_list.append({'id': country_id, 'name': country, 'sub_regions': sub_region_list})
