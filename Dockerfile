@@ -1,6 +1,6 @@
 FROM python:3.10.8-slim
 
-RUN apt-get update && \
+RUN apt-get update && apt-get -y install \
     libpq-dev \
     gcc \
     geos \
