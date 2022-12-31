@@ -45,6 +45,6 @@ jobs:
       uses: floms/action-caprover@v1
       with:
         host: '${{ secrets.CAPROVER_SERVER }}'
-        token: '${{ secrets.APP_TOKEN }}'
+        password: '${{ secrets.CAPROVER_PASSWORD }}'
         app: '${{ secrets.APP_NAME }}'
         image: ${{ steps.meta.outputs.tags }}
