@@ -161,7 +161,7 @@ USE_TZ = True
 
 # WhiteNoise Configuration
 # http://whitenoise.evans.io/en/stable/#quickstart-for-django-apps
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # Static files (CSS, JavaScript, Images)
 
