@@ -1,6 +1,10 @@
 FROM python:3.10.8-slim
 
-RUN apt-get update && apt-get -y install libpq-dev gcc
+RUN apt-get update && \
+    libpq-dev \
+    gcc \
+    geos \
+    gdal
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
