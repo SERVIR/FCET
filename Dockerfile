@@ -1,6 +1,6 @@
 FROM python:3.10.8-slim
 
-RUN apt-get update && apt-get -install -y postgresql-dev
+RUN apt-get update && apt-get install -y postgresql-dev
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
