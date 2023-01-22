@@ -224,3 +224,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # DO not add a trailing "/"
 GEOSERVER_URL = os.getenv("GEOSERVER_URL")
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
