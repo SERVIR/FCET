@@ -1,10 +1,10 @@
-asgiref==3.5.2
+asgiref==3.2.10
 bcrypt==4.0.1
 certifi==2022.9.24
 cffi==1.15.1
 charset-normalizer==2.1.1
 cryptography==38.0.3
-Django==3.0
+Django==3.1
 django-extensions==3.0.0
 django-rest-framework==0.1.0
 djangorestframework==3.14.0
