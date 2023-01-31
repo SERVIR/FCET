@@ -93,6 +93,12 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ]
+        }
+    }
+]
+
+WSGI_APPLICATION = 'Evaluator.wsgi.application'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -170,14 +176,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GEOSERVER_URL = os.getenv("GEOSERVER_URL")
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-
-
-            ],
-        },
-    },
-]
-
-WSGI_APPLICATION = 'Evaluator.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
