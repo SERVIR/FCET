@@ -5,7 +5,7 @@ Django settings for Evaluator project.
 from pathlib import Path
 import os
 
-if not os.getenv("IN_PRODUCTION"):
+if not int(os.getenv("IN_PRODUCTION")):
     # Load settings variables from local .env file
     from dotenv import load_dotenv
     load_dotenv()
@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG")
+DEBUG = int(os.getenv("DJANGO_DEBUG"))
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS").split(",")
 
