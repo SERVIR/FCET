@@ -179,41 +179,17 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-try:
-    from sshtunnel import SSHTunnelForwarder
-
-    # Connect to a server using the ssh keys. See the sshtunnel documentation for using password authentication
-    ssh_tunnel = SSHTunnelForwarder(
-        os.getenv("DJANGO_DB_HOST"),
-        ssh_username=os.getenv("DJANGO_DB_HOST_USER"),
-        ssh_password=os.getenv("DJANGO_DB_HOST_PWD"),
-        remote_bind_address=('localhost', 5432),
-    )
-    ssh_tunnel.start()
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': os.getenv("DJANGO_DB_NAME"),
-            'USER': os.getenv("DJANGO_DB_USER"),
-            'PASSWORD': os.getenv("DJANGO_DB_PWD"),
-            'HOST': '127.0.0.1',
-            'PORT': ssh_tunnel.local_bind_port,
-            'CONN_MAX_AGE': 600,
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': os.getenv("DJANGO_DB_NAME"),
+        'USER': os.getenv("DJANGO_DB_USER"),
+        'PASSWORD': os.getenv("DJANGO_DB_PWD"),
+        'HOST': os.getenv("DJANGO_DB_HOST"),
+        'PORT': 5432,
+        'CONN_MAX_AGE': 600,
     }
-except:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': os.getenv("DJANGO_DB_NAME"),
-            'USER': os.getenv("DJANGO_DB_USER"),
-            'PASSWORD': os.getenv("DJANGO_DB_PWD"),
-            'HOST': os.getenv("DJANGO_DB_HOST"),
-            'PORT': 5432,
-            'CONN_MAX_AGE': 600,
-        }
-    }
+}
     
 #CACHES = {
 #    'default': {
