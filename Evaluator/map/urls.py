@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path as url
 from map import views
 urlpatterns = [
     url(r'^clear$', views.clear_map),

@@ -8,7 +8,8 @@ def geojson_to_polygons(json, original_project, desired_projection):
         """Return GEOSGeometry polygon from polygon dictionary"""
         json_dict_polygon = json_dict_polygon['geometry']
         geo = GEOSGeometry(dump_json(json_dict_polygon))
-        geo.set_srid(original_project)
+        geo.srid = original_project
+        # geo.set_srid(original_project) # Fix manual selection tools bug (20/01/2013)
         geo.transform(desired_projection)
         return geo
     if json == '':
@@ -38,15 +39,15 @@ def polygons_to_mpoly(polygons):
 def shapefile_to_geojson(shape_layer):
     geoms = shape_layer.get_geoms()
     for geom in geoms:
-        geom.transform(900913)
+        geom.transform(3857)
     # Create required enteries for GeoJSON representation
     geo_json = {"type": "FeatureCollection",
-                "features": [
-                    {"type": "Feature",
-                     "geometry": load_json(geom.geojson),
-                     "properties":{}
-                     }
-                for geom in geoms]}
+               "features": [
+                   {"type": "Feature",
+                    "geometry": load_json(geom.geojson),
+                    "properties":{}
+                    }
+               for geom in geoms]}
     return dump_json(geo_json)
 
 def is_polygon(layer):

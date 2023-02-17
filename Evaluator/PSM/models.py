@@ -17,7 +17,7 @@ class PSM(models.Model):
     
     #HINT: ForeignKey(unique=True) is usually better served by a OneToOneField.
     #TODO: Change to auth user
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     matching_method = models.CharField(max_length = 50, choices = METHODS)
     matching_estimator = models.CharField(max_length = 50,
                                           choices = ESTIMATORS)

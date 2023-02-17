@@ -10,13 +10,14 @@ from statsmodels.tools.tools import add_constant
 from statsmodels.stats.weightstats import ttest_ind
 import pandas as pd
 import numpy as np
-from scipy.stats import norm, chisqprob
+from scipy.stats import norm
+from scipy.stats import chi2 as chisqprob
 from collections import defaultdict
 
 
 import sklearn.neighbors as sk
 
-def fit_reg(covariate, treated, weights=pd.Series()):
+def fit_reg(covariate, treated, weights=pd.Series(dtype='float64')):
     treated = add_constant(treated)
     if not weights.any():
         reg = GLM(covariate, treated)
@@ -63,7 +64,8 @@ class Match(object):
 
         queries = treated_group[treated_group.index]
         dist, ind = tree.query([[x] for x in queries], k=1, breadth_first=True)
-        matches[treated_group.index] = control_group.index[[x for x in ind]].values.flatten()
+        # Fix AttributeError: 'numpy.ndarray' object has no attribute 'values'
+        matches[treated_group.index] = control_group.index[[x for x in ind]].flatten()
         return matches
 
     def _make_match_array(self, treated_group, control_group):
@@ -124,10 +126,11 @@ class StatisticalMatching(object):
 
     def _create_propensity_scores(self, treated, design_matrix, link_type='logit'):
         if link_type == 'logit':
-            link = families.links.logit
+            link = families.links.logit()
         elif link_type == 'probit':
-            link = families.links.probit
+            link = families.links.probit()
 
+        # Fix TypeError: Calling Family(..) with a link class is not allowed. Use an instance of a link class instead.
         family = families.Binomial(link)
         reg = GLM(treated, design_matrix, family=family)
         fitted_reg = reg.fit()
@@ -283,7 +286,7 @@ class Results(object):
 
             for value in match_indicies:
                 weights[value] += 1
-            return np.asarray(weights.values())
+            return np.asarray(list(weights.values()))
 
         def sample_variance(outcomes):
             """
@@ -363,12 +366,12 @@ class BalanceStatistics(pd.DataFrame):
         fitted_reg = self._fit_unmatched_regression(statmatch)
         self.unmatched_prsquared = 1 - fitted_reg.llf / fitted_reg.llnull
         self.unmatched_llr = -2 * (fitted_reg.llnull - fitted_reg.llf)
-        self.unmatched_llr_pvalue = chisqprob(self.unmatched_llr, fitted_reg.df_model)
+        self.unmatched_llr_pvalue = chisqprob.sf(self.unmatched_llr, fitted_reg.df_model)
 
         fitted_reg = self._fit_matched_regression(statmatch)
         self.matched_prsquared = 1 - fitted_reg.llf / fitted_reg.llnull
         self.matched_llr = -2 * (fitted_reg.llnull - fitted_reg.llf)
-        self.matched_llr_pvalue = chisqprob(self.matched_llr, fitted_reg.df_model)
+        self.matched_llr_pvalue = chisqprob.sf(self.matched_llr, fitted_reg.df_model)
 
     def _unmatched_treated_mean(self, statmatch):
         """
@@ -441,8 +444,8 @@ class BalanceStatistics(pd.DataFrame):
         """
         has_match = np.isfinite(statmatch.matches)
         match_index = np.asarray(statmatch.matches[has_match], dtype=np.int32)
-
-        return np.array(statmatch.design_matrix[statmatch.names].ix[match_index].mean())
+        # Fix AttributeError: 'DataFrame' object has no attribute 'ix' -> .iloc for index
+        return np.array(statmatch.design_matrix.loc[match_index, statmatch.names].mean())
 
     def _matched_bias(self, statmatch):
         """
@@ -477,7 +480,9 @@ class BalanceStatistics(pd.DataFrame):
 
             for value in match_indicies:
                 weights[value] += 1
-            return np.asarray(weights.values())
+
+            # Fix TypeError iteration over a 0-d array --> cast dict_values as list
+            return np.asarray(list(weights.values()))
 
         has_match = np.isfinite(statmatch.matches)
         match_index = np.asarray(statmatch.matches[has_match], dtype=np.int32)
@@ -485,9 +490,10 @@ class BalanceStatistics(pd.DataFrame):
         weights = get_match_weights(statmatch.matches)
 
         treated = np.array(statmatch.design_matrix[statmatch.names][has_match])
-        control = np.array(statmatch.design_matrix[statmatch.names].ix[unique_matches])
-
-        (tstat, _, _) = ttest_ind(treated, control, weights=(None, weights))
+        # Fix AttributeError at 'DataFrame' object has no attribute 'ix'
+        control = np.array(statmatch.design_matrix.loc[unique_matches, statmatch.names])
+        # Fix TypeError: float() argument must be a string or a real number, not 'dict_values'
+        (tstat, _, _) = ttest_ind(treated, control, weights=(None, list(weights)))
         return tstat
 
     def _matched_p_value(self, statmatch):
@@ -509,7 +515,7 @@ class BalanceStatistics(pd.DataFrame):
 
             for value in match_indicies:
                 weights[value] += 1
-            return np.asarray(weights.values())
+            return np.asarray(list(weights.values()))
 
         has_match = np.isfinite(statmatch.matches)
         match_index = np.asarray(statmatch.matches[has_match], dtype=np.int32)
@@ -517,7 +523,8 @@ class BalanceStatistics(pd.DataFrame):
         weights = get_match_weights(statmatch.matches)
 
         treated = np.array(statmatch.design_matrix[statmatch.names][has_match])
-        control = np.array(statmatch.design_matrix[statmatch.names].ix[unique_matches])
+
+        control = np.array(statmatch.design_matrix.loc[unique_matches, statmatch.names])
 
         (_, pvalue, _) = ttest_ind(treated, control, weights=(None, weights))
         return pvalue
@@ -534,7 +541,7 @@ class BalanceStatistics(pd.DataFrame):
         return 100 * (abs(bias) - abs(biasm)) / abs(bias)
 
     def _fit_unmatched_regression(self, statmatch):
-        link = families.links.probit
+        link = families.links.probit()
         family = families.Binomial(link)
         reg = GLM(statmatch.treated, statmatch.design_matrix, family=family)
         return reg.fit()
@@ -542,13 +549,17 @@ class BalanceStatistics(pd.DataFrame):
     def _fit_matched_regression(self, statmatch):
         has_match = np.isfinite(statmatch.matches)
         treated_index = has_match[has_match == True].index
-        match_index = np.asarray(statmatch.matches[has_match], dtype=np.int32)
+        # TypeError all inputs must be Index
+        match_index = pd.Index(statmatch.matches[has_match], dtype=np.int32)
+        
         regression_index = treated_index.append(match_index)
 
-        link = families.links.probit
+        link = families.links.probit()
         family = families.Binomial(link)
-        reg = GLM(statmatch.treated.ix[regression_index], statmatch.design_matrix.ix[regression_index],
-                  family=family)
+        reg = GLM(
+            statmatch.treated.loc[regression_index], 
+            statmatch.design_matrix.loc[regression_index],
+            family=family)
         return reg.fit()
 
     @property
@@ -610,7 +621,9 @@ class RosenbaumBounds(object):
         self.unique_control_size = float(self.statmatch.matches.value_counts().count())
         self.total_observations = float(self.treated_size + self.unique_control_size)
         self.successes_treated = float(outcome[self.statmatch.treated == True].sum())
-        successes_controlled_unique = outcome.ix[self.statmatch.matches.value_counts().index].sum()
+        successes_controlled_unique = outcome.loc[
+            self.statmatch.matches.value_counts().index
+            ].sum()
         self.successes = float(self.successes_treated + successes_controlled_unique)
 
     def q_mh(self, gamma, bound_type):

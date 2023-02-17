@@ -25,7 +25,7 @@ logic in the functions. Rather than wasting runtime resources doing these tests,
 test suite (not yet made) to check the correctness of an adapter when it's plugged in.
 """
 
-import models
+from .models import Feature, FeatureStatus, FastFeatureStatus, Attribute, AttributeValue
 import logging
 from gc import collect
 from django.contrib.gis.geos import MultiPoint
@@ -141,66 +141,66 @@ class AbstractFeatureStatusAdapter(object):
 class PostgresRelationalFSA(AbstractFeatureStatusAdapter):
     def get_treated(self, user_map):
         return list(
-                models.FeatureStatus.objects
+                FeatureStatus.objects
                     .filter(user_map=user_map, treated=True)
                     .values_list('feature_id', flat=True)
         )
 
     def set_treated(self, user_map, treated):
         (
-            models.FeatureStatus.objects
+            FeatureStatus.objects
                 .filter(user_map=user_map, feature_id__in=treated, controlled=False)
                 .update(treated=True)
         )
 
     def clear_treated(self, user_map):
-        models.FeatureStatus.objects.filter(user_map=user_map).update(treated=False)
+        FeatureStatus.objects.filter(user_map=user_map).update(treated=False)
 
     def get_controlled(self, user_map):
         return list(
-                models.FeatureStatus.objects
+                FeatureStatus.objects
                     .filter(user_map=user_map, controlled=True)
                     .values_list('feature_id', flat=True)
         )
 
     def set_controlled(self, user_map, controlled):
         (
-            models.FeatureStatus.objects
+            FeatureStatus.objects
                 .filter(user_map=user_map, feature_id__in=controlled, treated=False)
                 .update(controlled=True)
         )
 
     def clear_controlled(self, user_map):
-        models.FeatureStatus.objects.filter(user_map=user_map).update(controlled=False)
+        FeatureStatus.objects.filter(user_map=user_map).update(controlled=False)
 
     def delete_controlled(self, user_map, controlled):
-        models.FeatureStatus.objects.filter(user_map=user_map, feature_id__in=controlled).update(controlled=False)
+        FeatureStatus.objects.filter(user_map=user_map, feature_id__in=controlled).update(controlled=False)
 
     def get_matched(self, user_map):
         return list(
-                models.FeatureStatus.objects
+                FeatureStatus.objects
                     .filter(user_map=user_map, matched=True)
                     .values_list('feature_id', flat=True)
         )
 
     def set_matched(self, user_map, matches):
-        points = models.FeatureStatus.objects.filter(feature_id__in=matches)
+        points = FeatureStatus.objects.filter(feature_id__in=matches)
         treatment_set = points.filter(user_map=user_map)
         treatment_set = treatment_set.exclude(treated=True)
         treatment_set.update(matched=True)
 
     def clear_matched(self, user_map):
-        models.FeatureStatus.objects.filter(user_map=user_map).update(matched=False)
+        FeatureStatus.objects.filter(user_map=user_map).update(matched=False)
 
     def set_forest_filter(self, user_map, features):
-        models.FeatureStatus.objects.filter(user_map=user_map, feature_id__in=features).update(forest_filter=True)
+        FeatureStatus.objects.filter(user_map=user_map, feature_id__in=features).update(forest_filter=True)
 
     def clear_forest_filter(self, user_map):
-        models.FeatureStatus.objects.filter(user_map=user_map).update(forest_filter=False)
+        FeatureStatus.objects.filter(user_map=user_map).update(forest_filter=False)
 
     def get_unmarked_studyarea_in_polygons(self, user_map, mpoly):
         return list(
-                models.FeatureStatus.objects
+                FeatureStatus.objects
                     .filter(feature__geom_point__within=mpoly, user_map=user_map)
                     .exclude(controlled=True, treated=True)
                     .values_list('feature_id', flat=True)
@@ -208,7 +208,7 @@ class PostgresRelationalFSA(AbstractFeatureStatusAdapter):
 
     def get_study_area(self, user_map):
         return list(
-                models.FeatureStatus.objects
+                FeatureStatus.objects
                     .filter(user_map=user_map)
                     .values_list('feature_id', flat=True)
         )
@@ -220,7 +220,7 @@ class PostgresRelationalFSA(AbstractFeatureStatusAdapter):
         feature_chunk = list(features[:chunk])
         while feature_chunk:
             logger.debug("Stepping into Feature chunk")
-            feature_status_list = [models.FeatureStatus(user_map=user_map,
+            feature_status_list = [FeatureStatus(user_map=user_map,
                                                         feature=feature,
                                                         treated=False,
                                                         controlled=False)
@@ -228,7 +228,7 @@ class PostgresRelationalFSA(AbstractFeatureStatusAdapter):
                                    in feature_chunk]
 
             logger.debug("FeatureStatus bulkwrite")
-            models.FeatureStatus.objects.bulk_create(feature_status_list)
+            FeatureStatus.objects.bulk_create(feature_status_list)
             logger.debug("FeatureStatus bulkwrite complete")
             feature_chunk = list(features[chunk:chunk + chunksize])
             chunk += chunksize
@@ -237,7 +237,7 @@ class PostgresRelationalFSA(AbstractFeatureStatusAdapter):
 
 class PostgresFSA(AbstractFeatureStatusAdapter):
     def get_treated(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="TREATED")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="TREATED")
         return ffs.feature_set
 
     def set_treated(self, user_map, new_treated):
@@ -248,13 +248,13 @@ class PostgresFSA(AbstractFeatureStatusAdapter):
         forest_filtered = set(self.get_forest_filter(user_map))
 
         new_treated = list(study_area & (treated | set(new_treated)) - controlled - forest_filtered)
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="TREATED").update(feature_set=new_treated)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="TREATED").update(feature_set=new_treated)
 
     def clear_treated(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="TREATED").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="TREATED").update(feature_set=[])
 
     def get_controlled(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="CONTROLLED")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="CONTROLLED")
         return ffs.feature_set
 
     def set_controlled(self, user_map, new_controlled):
@@ -265,18 +265,18 @@ class PostgresFSA(AbstractFeatureStatusAdapter):
         forest_filtered = set(self.get_forest_filter(user_map))
 
         controlled = list(study_area & (controlled | set(new_controlled)) - treated - forest_filtered)
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(feature_set=controlled)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(feature_set=controlled)
 
     def clear_controlled(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(feature_set=[])
 
     def delete_controlled(self, user_map, controlled):
         new_controlled = list(set(self.get_controlled(user_map)) - set(controlled))
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CONTROLLED").update(
                 feature_set=new_controlled)
 
     def get_matched(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="MATCHED")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="MATCHED")
         return ffs.feature_set
 
     def set_matched(self, user_map, matches):
@@ -287,37 +287,37 @@ class PostgresFSA(AbstractFeatureStatusAdapter):
         assert len(set(matches) & forest_filtered) == 0, "Some matched points are in the group of filtered points " \
                                                          "that have been filtered out due to forest cover"
         matched = list(set(matches))
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="MATCHED").update(feature_set=matched)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="MATCHED").update(feature_set=matched)
 
     def clear_matched(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="MATCHED").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="MATCHED").update(feature_set=[])
 
     def get_forest_filter(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="FORESTFILTER")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="FORESTFILTER")
         return ffs.feature_set
 
     def set_forest_filter(self, user_map, features):
         forest_filtered = self.get_forest_filter(user_map)
         forest_filtered = list(set(features))
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="FORESTFILTER").update(
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="FORESTFILTER").update(
                 feature_set=forest_filtered)
 
     def clear_forest_filter(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="FORESTFILTER").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="FORESTFILTER").update(feature_set=[])
 
 #    def get_points_in_polygons(self, multi_polygons):
 #        points = set()
 #        for multi_polygon in multi_polygons:
 #            points.update(
 #                list(
-#                    models.Feature.objects
+#                    Feature.objects
 #                        .filter(geom_point__within=multi_polygon)
 #                    )
 #            )
 #        return [point.id for point in points]
     def get_points_in_polygons(self, mpoly):
         return [f.id
-                for f in models.Feature.objects.raw(
+                for f in Feature.objects.raw(
                     '''SELECT "layers_feature"."id"
                        FROM "layers_feature", (
                           SELECT (ST_DUMP(ST_GeomFromWKB(%s, 4326))).geom AS geometry) as selection
@@ -330,12 +330,12 @@ class PostgresFSA(AbstractFeatureStatusAdapter):
         # This now retrieves all points within a polygon
         # There is some room left open for foul play if people select very large polygons ... see if this can be fixed without breaking performance
 
-        #unmarked_studyarea = models.FastFeatureStatus.objects.get(user_map=user_map, set_type="SELECTED").feature_set
+        #unmarked_studyarea = FastFeatureStatus.objects.get(user_map=user_map, set_type="SELECTED").feature_set
         # We use a raw query for performance reasons, standard django does allow Postgresql to build an efficient query plan
         # Turns out if you use a single multipolygon, PostGIS will use a single bbox and won't make good use of the geometry index
         # Instead we make a table in a subquery of several small polygons a cartesian join between this table and the feature table make good use of our index
         return [f.id
-                for f in models.Feature.objects.raw(
+                for f in Feature.objects.raw(
                     '''SELECT "layers_feature"."id"
                        FROM "layers_feature", (
                           SELECT (ST_DUMP(ST_GeomFromWKB(%s, 4326))).geom AS geometry) as selection
@@ -345,61 +345,61 @@ class PostgresFSA(AbstractFeatureStatusAdapter):
     def collect_features(self, user_map, features, chunksize=1000):
         feature_ids = [feature.id for feature in features]
 
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
         selected = list(set(feature_ids))
         ffs.feature_set = selected
 
     def get_selected(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
         return ffs.feature_set
 
     def set_selected(self, user_map, feature_ids):
-        #ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
+        #ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="SELECTED")
         selected = self.get_selected(user_map)
         selected = list(set(feature_ids))
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=selected)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=selected)
 
     def add_selected(self, user_map, feature_ids):
         selected = set(self.get_selected(user_map))
         new_selected = set(feature_ids)
         new_selected = list(selected | new_selected)
 
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=new_selected)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=new_selected)
 
     def remove_selected(self, user_map, feature_ids):
         selected = set(self.get_selected(user_map))
         unselect = set(feature_ids)
         new_selected = list(selected - unselect)
 
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=new_selected)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=new_selected)
 
     def clear_selected(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="SELECTED").update(feature_set=[])
 
     def get_candidates(self, user_map):
-        ffs, created = models.FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="CANDIDATES")
+        ffs, created = FastFeatureStatus.objects.get_or_create(user_map=user_map, set_type="CANDIDATES")
         return ffs.feature_set
 
     def set_candidates(self, user_map, feature_ids):
         candidates = list(set(feature_ids))
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=candidates)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=candidates)
 
     def add_candidates(self, user_map, feature_ids):
         candidates = set(self.get_candidates(user_map))
         new_candidates = set(feature_ids)
         new_candidates = list(candidates | new_candidates)
 
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=new_candidates)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=new_candidates)
 
     def remove_candidates(self, user_map, feature_ids):
         candidates = set(self.get_candidates(user_map))
         candidates_to_remove = set(feature_ids)
         new_candidates = list(candidates - candidates_to_remove)
 
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=new_candidates)
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=new_candidates)
 
     def clear_candidates(self, user_map):
-        models.FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=[])
+        FastFeatureStatus.objects.filter(user_map=user_map, set_type="CANDIDATES").update(feature_set=[])
 
     def get_all(self, user_map):
         """
@@ -430,10 +430,10 @@ def get_treatment_points(user_map):
 
 
 def select_protected_areas(user_map):
-    attribute_id = models.Attribute.objects.filter(name='protctd')
+    attribute_id = Attribute.objects.filter(name='protctd')
     feature_ids = fs_manager.get_selected(user_map=user_map)
     feature_ids = list(
-            models.AttributeValue.objects
+            AttributeValue.objects
                 .filter(attribute_id__in=attribute_id, feature_id__in=feature_ids, value='1.0')
                 .values_list('feature_id', flat=True)
     )
@@ -469,14 +469,14 @@ def set_control_points_by_radius(user_map, lower, upper):
     treated = fs_manager.get_treated(user_map)
     selected = fs_manager.get_selected(user_map)
     point_rows = list(
-            models.Feature.objects
+            Feature.objects
                 .filter(pk__in=treated)
                 .values_list('geom_point', flat=True)
     )
 
     mpoints = MultiPoint(point_rows)
     bounded = list(
-            models.Feature.objects
+            Feature.objects
                 .filter(pk__in=selected)
                 .filter(geom_point__distance_lte=(mpoints, D(km=upper)),
                         geom_point__distance_gte=(mpoints, D(km=lower)))
@@ -496,7 +496,7 @@ def set_control_points_remove_spillovers(user_map, upper):
     """
     treated = fs_manager.get_treated(user_map)
     point_rows = list(
-            models.Feature.objects
+            Feature.objects
                 .filter(pk__in=treated)
                 .values_list('geom_point', flat=True)
     )
@@ -506,7 +506,7 @@ def set_control_points_remove_spillovers(user_map, upper):
 
     controlled = fs_manager.get_controlled(user_map)
     bounded = list(
-            models.Feature.objects
+            Feature.objects
                 .filter(pk__in=controlled, geom_point__distance_lte=(mpoints, D(km=upper)))
                 .values_list('id', flat=True)
     )
@@ -569,9 +569,9 @@ def set_forest_cover_filter(user_map, lower_bound, upper_bound):
 
     # Get user's points
     feature_ids = fs_manager.get_selected(user_map=user_map)
-    attribute_ids = [a.id for a in models.Attribute.objects.filter(name='frst_cv')]
+    attribute_ids = [a.id for a in Attribute.objects.filter(name='frst_cv')]
 
-    feature_forest_cover = dict(models.AttributeValue.objects.filter(
+    feature_forest_cover = dict(AttributeValue.objects.filter(
             feature_id__in=feature_ids,
             attribute_id__in=attribute_ids).values_list('feature_id', 'value'))
 

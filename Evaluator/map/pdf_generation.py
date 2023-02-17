@@ -94,7 +94,7 @@ class ResultReport(object):
         fields['standard_errors'] = standard_error_names[fields['standard_errors']]
 
         # Present True/False as Yes/No
-        for key, item in fields.iteritems():
+        for key, item in fields.items():
             if item is True:
                 fields[key] = 'Yes'
             if item is False:

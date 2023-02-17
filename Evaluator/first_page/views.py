@@ -10,7 +10,7 @@ put into its own app if the the complexity of the routing expands
 '''
 
 from django.shortcuts import render
-from django.shortcuts import render_to_response
+from django.shortcuts import render as render_to_response
 from django.template import RequestContext
 from django.shortcuts import redirect
 from django.http import HttpResponse
@@ -22,36 +22,36 @@ import requests
 def index(request):
     '''Serves the main html page responsible for loading the ExtJS app, ExtJS dependencies, and google map dependencies'''
     return render_to_response(
-        'first_page/index.html',
-        context_instance=RequestContext(request))
+        template_name='first_page/index.html',
+        request=request)
 
 
 def app(request):
     '''Main app file. This loads all models, views, and controllers'''
-    return render(request, 'app/app.js')
+    return render(request, 'app/app.js', content_type='text/javascript')
 
 
 def viewport(request):
     '''This is the main view that loads in all others views and renders the front end.
     Here we determine the overall layout of the web page and fill in the details with other views'''
-    return render(request, 'app/view/Viewport.js')
+    return render(request, 'app/view/Viewport.js', content_type='text/javascript')
 
 
 def main_map(request):
     '''View to display the main map. The map is rendered using OpenLayers and sends calls to GeoServer,
     and google maps API to get geospatial data. OpenLayers handles map controls such as zooming and panning.
     Geoserver generates the actual map tiles from the geospatial data stored in PostgreSQL.'''
-    return render(request, 'app/view/MainMap.js')
+    return render(request, 'app/view/MainMap.js', content_type='text/javascript')
 
 
 ## Side bar
 def overview(request):
     '''View responsible for giving intro information to user'''
-    return render(request, 'app/view/Overview.js')
+    return render(request, 'app/view/Overview.js', content_type='text/javascript')
 
 def define_study_area(request):
     '''View responsible for selecting broad regions on the map'''
-    return render(request, 'app/view/DefineStudyArea.js')
+    return render(request, 'app/view/DefineStudyArea.js', content_type='text/javascript')
 
 
 def define_study_years(request):
@@ -59,7 +59,7 @@ def define_study_years(request):
     View responsible for selecting the time range that the study will 
     account for
     '''
-    return render(request, 'app/view/DefineStudyYears.js')
+    return render(request, 'app/view/DefineStudyYears.js', content_type='text/javascript')
 
 
 def limit_plot_types(request):
@@ -67,7 +67,7 @@ def limit_plot_types(request):
     View responsible for selecting classes of points to remove from 
     the study
     '''
-    return render(request, 'app/view/LimitPlotTypes.js')
+    return render(request, 'app/view/LimitPlotTypes.js', content_type='text/javascript')
 
 
 def select_policy_areas(request):
@@ -76,7 +76,7 @@ def select_policy_areas(request):
     polygon selection, and policy selection in the context of 
     selecting treatment areas
     '''
-    return render(request, 'app/view/SelectPolicyAreas.js')
+    return render(request, 'app/view/SelectPolicyAreas.js', content_type='text/javascript')
 
 
 def select_control_areas(request):
@@ -85,7 +85,7 @@ def select_control_areas(request):
     polygon selection, and policy selection in the context of 
     selecting controlled areas
     '''
-    return render(request, 'app/view/SelectControlAreas.js')
+    return render(request, 'app/view/SelectControlAreas.js', content_type='text/javascript')
 
 
 def match_similar_plots(request):
@@ -93,7 +93,7 @@ def match_similar_plots(request):
     View responsible for selecting the parameters for matching and 
     initiating the matching algorithm
     '''
-    return render(request, 'app/view/MatchSimilarPlots.js')
+    return render(request, 'app/view/MatchSimilarPlots.js', content_type='text/javascript')
 
 
 # These three views have considerably different data passed to them
@@ -102,7 +102,7 @@ def check_balance_statistics(request):
     View responsible for displaying balance statistics data output 
     from the matching procedure    
     '''
-    return render(request, 'app/view/CheckBalanceStatistics.js')
+    return render(request, 'app/view/CheckBalanceStatistics.js', content_type='text/javascript')
 
 
 def measure_treatment_effects(request):
@@ -110,14 +110,14 @@ def measure_treatment_effects(request):
     View resonsible for displaying the actual results from the 
     matching procedure
     '''
-    return render(request, 'app/view/MeasureTreatmentEffects.js')
+    return render(request, 'app/view/MeasureTreatmentEffects.js', content_type='text/javascript')
 
 
 def check_sensitivity(request):
     '''
     View resonsible for displaying Rosenbaum bounds of Mantel-Haenzel bounds
     '''
-    return render(request, 'app/view/CheckSensitivity.js')
+    return render(request, 'app/view/CheckSensitivity.js', content_type='text/javascript')
 
 
 def report(request):
@@ -125,60 +125,63 @@ def report(request):
     View responsible for giving a way to download a complete 
     report of matching    
     '''
-    return render(request, 'app/view/Report.js')
+    return render(request, 'app/view/Report.js', content_type='text/javascript')
 
 
 # Javascript to render floating windows
 def cs(request):
     '''Window related to Check Sensitivity'''
-    return render(request, 'app/view/CS.js')
+    return render(request, 'app/view/CS.js', content_type='text/javascript')
 
 
 def msp(request):
     '''Window related to Match Similar Plots'''
-    return render(request, 'app/view/MSP.js')
+    return render(request, 'app/view/MSP.js', content_type='text/javascript')
 
 
 def mte(request):
     '''Window related to Results/Measure Treatment Effects'''
-    return render(request, 'app/view/MTE.js')
+    return render(request, 'app/view/MTE.js', content_type='text/javascript')
 
 
 # Models
 # Needs to be refactored -- models are not well separated yet
 def station_model(request):
-    return render(request, 'app/model/Station.js')
+    return render(request, 'app/model/Station.js', content_type='text/javascript')
 
 
 def song(request):
-    return render(request, 'app/model/Song.js')
+    return render(request, 'app/model/Song.js', content_type='text/javascript')
 
 
 # Stores
 # Needs to be refactored -- stores are not well separated yet--probably won't be
 def recent_songs_store(request):
-    return render(request, 'app/store/RecentSongs.js')
+    return render(request, 'app/store/RecentSongs.js', content_type='text/javascript')
 
 
 def stations_store(request):
-    return render(request, 'app/store/Stations.js')
+    return render(request, 'app/store/Stations.js', content_type='text/javascript')
 
 
 def search_results_store(request):
-    return render(request, 'app/store/SearchResults.js')
+    return render(request, 'app/store/SearchResults.js', content_type='text/javascript')
 
 
 # Controllers
 # Needs to be refactored -- controllers are not well separated yet
 def station_controller(request):
-    return render(request, 'app/controller/Station.js')
+    return render(request, 'app/controller/Station.js', content_type='text/javascript')
 
 
 def song_controller(request):
-    return render(request, 'app/controller/Song.js')
+    return render(request, 'app/controller/Song.js', content_type='text/javascript')
 
 
 # Temporary view for geoserver
+
+from django.conf import settings
+
 @csrf_exempt
 def geoserver_wms(request):
     '''View to reroute geoserver requests to the geoserver server
@@ -204,17 +207,17 @@ def geoserver_wms(request):
 
 
         return sample_rate*(zoom_sample_rate) + min_sample
-
+    
     if request.method == 'GET':
         params = (key + '=' + str(value)
                   for (key, value)
-                  in request.GET.iteritems())
+                  in request.GET.items())
 
         bbox = request.GET.get('BBOX').split(',')
         sample_factor = calculate_sample_probability(bbox)
-        hidden_params = '&viewparams=usermap:' + str(request.session['mid']) + ';' + \
+        hidden_params = '&viewparams=usermap:' + str(request.session.get('mid')) + ';' + \
                         'sample:' + str(sample_factor)
-        base_url = 'http://127.0.0.1:8080/geoserver/evaluator/wms?'
+        base_url = f'{settings.GEOSERVER_URL}/geoserver/evaluator/wms?'
         r = requests.get(base_url + '&'.join(params) + hidden_params)
         response = HttpResponse(content_type="image/gif")
         response.write(r.content)
@@ -223,16 +226,15 @@ def geoserver_wms(request):
     elif request.method == 'POST':
         params = (key + '=' + str(value)
                   for (key, value)
-                  in request.GET.iteritems())
+                  in request.GET.items())
 
         hidden_params = '&viewparams=usermap:' + str(request.session['mid'])
-        base_url = 'http://127.0.0.1:8080/geoserver/evaluator/wfs?'
+        base_url = f'{settings.GEOSERVER_URL}/geoserver/evaluator/wfs?'
         # r = requests.get(base_url + '&'.join(params) + hidden_params)
         r = requests.post(base_url + '&'.join(params) + hidden_params, data=request.body)
         response = HttpResponse(content_type="application/xml")
         response.write(r.text)
         return response
-
 
 @csrf_exempt
 def geoserver_wfs(request):
@@ -251,10 +253,10 @@ def geoserver_wfs(request):
     if request.method == 'POST':
         params = (key + '=' + str(value)
                   for (key, value)
-                  in request.GET.iteritems())
+                  in request.GET.items())
 
         hidden_params = '&viewparams=usermap:' + str(request.session['mid'])
-        base_url = 'http://127.0.0.1:8080/geoserver/evaluator/wfs?'
+        base_url = f'{settings.GEOSERVER_URL}/geoserver/evaluator/wfs?'
         # r = requests.get(base_url + '&'.join(params) + hidden_params)
         r = requests.post(base_url, data=request.body)
         response = HttpResponse(content_type="application/xml")
@@ -269,7 +271,7 @@ def geoserver_map(bbox, width, height, user_map):
         map_scalar = float(500)/width
     else:
         map_scalar = float(500)/height
-    base_url = 'http://127.0.0.1:8080/geoserver/evaluator/wms?'
+    base_url = f'{settings.GEOSERVER_URL}/geoserver/evaluator/wms?'
     layers = 'LAYERS=evaluator%3Ausermap_fastfeature,evaluator%3Aregions_region&'
     styles = 'STYLES=,regions_for_pdf&'
     format = 'FORMAT=image%2Fpng&'

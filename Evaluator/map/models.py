@@ -33,5 +33,5 @@ class ShapeFileUpload(models.Model):
         return layer
 
 class UserSession(models.Model):
-    user = models.ForeignKey(User)
-    session = models.ForeignKey(Session)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)

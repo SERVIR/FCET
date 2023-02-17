@@ -168,6 +168,7 @@ Ext.define('Evaluator.view.UploadTreatmentWindow', {
                             method: 'POST',
                             waitMsg : 'Please wait...while uploading',
                             success : function (form, action) {
+                                console.log("form submit success action", action);
                                 sendTPolygons(action.result.geojson);
                                 //Ext.Msg.alert('Upload file..', action.result.message);
                                 Job.treatmentAreaOption = "Upload a Shapefile";
@@ -175,6 +176,7 @@ Ext.define('Evaluator.view.UploadTreatmentWindow', {
 								progressTracker.completeSelectTreatmentPoints();
                             },
                             failure: function(form, action) {
+                                console.log("form submit success action", action);
                                 Ext.Msg.alert('Upload file..', action.result.message);
                             }
                         });

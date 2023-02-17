@@ -1,8 +1,8 @@
-from django.shortcuts import render_to_response
+from django.shortcuts import render as render_to_response
 from django.template import RequestContext
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from .forms import UploadFileForm
 from layers.models import UploadFile
 from django.contrib.auth.models import User

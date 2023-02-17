@@ -4,7 +4,7 @@ including the main page. The structure is specific to an ExtJS app,
 but it's possible to interchange some components with little hassle.
 '''
 
-from django.conf.urls import url
+from django.urls import re_path as url
 from first_page import views
 
 urlpatterns  = [
