@@ -1,0 +1,80 @@
+Ext.define('Evaluator.view.DefineStudyArea', {
+	extend : 'Ext.panel.Panel',
+	alias : 'widget.definestudyarea',
+
+	// tpl: '<h1>About {artist}</h1><p>{description}</p>',
+
+	initComponent : function() {
+		/*
+		 * this.dockedItems = [{ xtype: 'container', layout: { type: 'hbox',
+		 * align: 'middle', pack: 'end' }, height: 100, items: [{ xtype:
+		 * 'component', width: 200, itemId: 'songdescription', tpl: '<h2>{artist}</h2><h1>{name}</h1><h2>{album}</h2>' }, {
+		 * xtype: 'button', text: 'menu', action: 'song-menu' }] }];
+		 */
+		this.dockedItems = [{
+					xtype : 'combo',
+					fieldLabel : 'By Country:',
+					store : ['Select a Country', 'Mexico'],
+					margin : '5 5 0 5',
+					listeners: {
+					    select : function (combo, records) {
+					    if (records[0].raw[0]=='Mexico') {
+                            map.setCenter(new OpenLayers.LonLat(-11459167.502817,1606301.1323178), 2);
+    					    }
+					    },
+					    afterrender : function () {
+					        this.setValue('Select a Country');
+					    }
+					}
+				}, {
+					xtype : 'combo',
+					fieldLabel : 'By Sub-Country Region:',
+					margin : '5 5 0 5'
+				}, {
+					xtype : 'combo',
+					fieldLabel : 'By State:',
+					store : ['Select a State', 'Chiapas'],
+					margin : '5 5 5 5',
+					listeners: {
+					    select : function (combo, records) {
+    					    Ext.Ajax.request({
+											url : '/map/clear',
+											method : 'GET',
+											success : function() {
+											    mexico.redraw(true);
+											}
+											});
+    					    if (records[0].raw[0]=='Chiapas') {
+	    				        map.setCenter(new OpenLayers.LonLat(-10290598.21456,1800756.9322485), 5);
+						var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Please wait..."});
+						myMask.show();
+	    				        Ext.Ajax.request({
+	    										url : '/map/mapchiapas',
+	    										method : 'GET',
+	    										success : function() {
+	    										    mexico.redraw(true);
+	    										}
+    					    });
+						myMask.hide()
+    					   }
+					    },
+					    afterrender : function () {
+					        Ext.Ajax.request({
+											url : '/map/clear',
+											method : 'GET',
+											success : function() {
+											    mexico.redraw(true);
+											}
+											});
+					        this.setValue('Select a State');
+					    }
+					}
+				}];
+		this.callParent();
+	}
+
+		/*
+	 * update: function(record) { var data = record ? record.data : {};
+	 * this.down('#songdescription').update(data); this.callParent([data]); }
+	 */
+	});
